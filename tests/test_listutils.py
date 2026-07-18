@@ -62,6 +62,23 @@ def test_barrel_list_insert_before_start_matches_list():
     assert len(bl) == int(1e5) + 1
 
 
+def test_barrel_list_negative_step_slice_matches_list():
+    data = list(range(10))
+    bl = BarrelList(data)
+
+    assert list(bl[::-1]) == data[::-1]
+    assert list(bl[::-2]) == data[::-2]
+    assert list(bl[8:2:-1]) == data[8:2:-1]
+    assert list(bl[-1:-5:-1]) == data[-1:-5:-1]
+    assert list(bl[9:0:-1]) == data[9:0:-1]
+
+    big = BarrelList(range(int(1e5)))
+    big._balance_list(0)
+    assert len(big.lists) > 1
+    assert list(big[::-1][:5]) == [99999, 99998, 99997, 99996, 99995]
+    assert list(big[50:40:-1]) == list(range(50, 40, -1))
+
+
 def test_sort_barrel_list():
     bl = BarrelList(reversed(range(100000)))
     bl.pop(50000)
