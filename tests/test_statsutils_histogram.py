@@ -45,6 +45,13 @@ def test_check_sum():
     return
 
 
+def test_constant_series_histogram():
+    # Freedman bin width is 0 when IQR is 0; still produce a usable histogram.
+    counts = Stats([1, 1, 1, 1]).get_histogram_counts()
+    assert sum(c for _, c in counts) == 4
+    assert Stats([7.0] * 10).format_histogram()
+
+
 def test_norm_regression():
     stats = Stats(NORM_DATA)
 
