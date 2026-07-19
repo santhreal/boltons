@@ -41,7 +41,6 @@ def test_jsonl_iterator():
 
 
 def test_reverse_iter_lines_stringio():
-    """Docs claim StringIO support; reverse must not TypeError on text buffers."""
     assert list(reverse_iter_lines(io.StringIO('a\nb\n'))) == ['', 'b', 'a']
     assert list(reverse_iter_lines(io.StringIO('a\nb'))) == ['b', 'a']
     assert list(JSONLIterator(io.StringIO('{"1": 1}\n{"2": 2}\n'), reverse=True)) == [
