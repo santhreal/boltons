@@ -197,6 +197,8 @@ class Bits:
         return Bits(self.val << other, self.len + other)
 
     def __rshift__(self, other):
+        if other >= self.len:
+            return Bits(0, 0)
         return Bits(self.val >> other, self.len - other)
 
     def __hash__(self):

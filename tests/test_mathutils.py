@@ -93,6 +93,9 @@ def test_bits():
     chk(Bits('01') & Bits('10'), Bits('00'))
     chk(Bits('11') >> 1, Bits('1'))
     chk(Bits('1') << 1, Bits('10'))
+    # over-shift: shifting out every bit yields an empty Bits, not a negative length
+    chk(Bits('1111') >> 4, Bits(0, 0))
+    chk(Bits('1111') >> 5, Bits(0, 0))
     assert Bits('0') != Bits('00')
     # test roundtrip as_/from_hex
     chk(Bits.from_hex(Bits('10101010').as_hex()),
