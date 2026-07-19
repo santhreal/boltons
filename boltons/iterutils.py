@@ -393,6 +393,10 @@ def chunk_ranges(input_size, chunk_size, input_offset=0, overlap_size=0, align=F
         input_offset, 'input_offset', strictly_positive=False)
     overlap_size = _validate_positive_int(
         overlap_size, 'overlap_size', strictly_positive=False)
+    # stride is chunk_size - overlap_size; same non-zero rule as frange/xfrange
+    if overlap_size >= chunk_size:
+        raise ValueError('expected overlap_size < chunk_size, not %r >= %r'
+                         % (overlap_size, chunk_size))
 
     input_stop = input_offset + input_size
 

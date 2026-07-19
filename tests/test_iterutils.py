@@ -593,6 +593,22 @@ def test_chunk_ranges():
     assert list(chunk_ranges(input_offset=3, input_size=15, chunk_size=5, overlap_size=1, align=True)) == [(3, 5), (4, 9), (8, 13), (12, 17), (16, 18)]
     assert list(chunk_ranges(input_offset=3, input_size=2, chunk_size=5, overlap_size=1, align=True)) == [(3, 5)]
 
+    # overlap_size == chunk_size: stride 0 → ValueError from range, or
+    # ZeroDivisionError on the align path (modulo by zero).
+    with pytest.raises(ValueError, match='overlap_size < chunk_size'):
+        list(chunk_ranges(input_size=10, chunk_size=3, overlap_size=3))
+    with pytest.raises(ValueError, match='overlap_size < chunk_size'):
+        list(chunk_ranges(input_size=10, chunk_size=3, overlap_size=3, align=True))
+    # overlap_size > chunk_size previously returned [] (or a bogus single
+    # chunk with align=True) instead of rejecting the impossible stride.
+    with pytest.raises(ValueError, match='overlap_size < chunk_size'):
+        list(chunk_ranges(input_size=10, chunk_size=3, overlap_size=4))
+    with pytest.raises(ValueError, match='overlap_size < chunk_size'):
+        list(chunk_ranges(input_size=10, chunk_size=3, overlap_size=4, align=True))
+    # max valid overlap still works
+    assert list(chunk_ranges(input_size=10, chunk_size=5, overlap_size=4)) == [
+        (0, 5), (1, 6), (2, 7), (3, 8), (4, 9), (5, 10)]
+
 
 def test_lstrip():
     from boltons.iterutils import lstrip
