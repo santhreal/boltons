@@ -1,3 +1,4 @@
+import io
 import os
 
 from boltons.jsonutils import (JSONLIterator,
@@ -37,3 +38,12 @@ def test_jsonl_iterator():
     jsonl_iter = JSONLIterator(open(JSONL_DATA_PATH), reverse=True)
     jsonl_list = list(jsonl_iter)
     assert jsonl_list == ref
+
+
+def test_reverse_iter_lines_stringio():
+    """Docs claim StringIO support; reverse must not TypeError on text buffers."""
+    assert list(reverse_iter_lines(io.StringIO('a\nb\n'))) == ['', 'b', 'a']
+    assert list(reverse_iter_lines(io.StringIO('a\nb'))) == ['b', 'a']
+    assert list(JSONLIterator(io.StringIO('{"1": 1}\n{"2": 2}\n'), reverse=True)) == [
+        {'2': 2}, {'1': 1}
+    ]

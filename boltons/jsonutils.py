@@ -71,27 +71,36 @@ def reverse_iter_lines(file_obj, blocksize=DEFAULT_BLOCKSIZE, preseek=True, enco
             generation.
 
     """
-    # This function is a bit of a pain because it attempts to be byte/text agnostic
+    # Byte/text agnostic: detach TextIO to bytes when possible; keep StringIO as text.
     try:
-        encoding = encoding or file_obj.encoding
+        enc_attr = file_obj.encoding
+        was_text = True
     except AttributeError:
-        # BytesIO
-        encoding = None
-    else:
-        encoding = 'utf-8'
+        enc_attr = None
+        was_text = False
 
-    # need orig_obj to keep alive otherwise __del__ on the TextWrapper will close the file
+    # Keep orig alive; TextWrapper.__del__ would close the buffer after detach.
     orig_obj = file_obj
     try:
         file_obj = orig_obj.detach()
+        detached = True
     except (AttributeError, io.UnsupportedOperation):
-        pass
+        detached = False
 
-    empty_bytes, newline_bytes, empty_text = b'', b'\n', ''
+    if was_text and detached:
+        encoding = encoding or enc_attr or 'utf-8'
+        empty_buf, newline, empty_yield = b'', b'\n', ''
+    elif was_text:
+        # StringIO / undetachable text: already unicode, do not decode.
+        encoding = None
+        empty_buf, newline, empty_yield = '', '\n', ''
+    else:
+        encoding = None
+        empty_buf, newline, empty_yield = b'', b'\n', b''
 
     if preseek:
         file_obj.seek(0, os.SEEK_END)
-    buff = empty_bytes
+    buff = empty_buf
     cur_pos = file_obj.tell()
     while 0 < cur_pos:
         read_size = min(blocksize, cur_pos)
@@ -101,10 +110,10 @@ def reverse_iter_lines(file_obj, blocksize=DEFAULT_BLOCKSIZE, preseek=True, enco
         buff = cur + buff
         lines = buff.splitlines()
 
-        if len(lines) < 2 or lines[0] == empty_bytes:
+        if len(lines) < 2 or lines[0] == empty_buf:
             continue
-        if buff[-1:] == newline_bytes:
-            yield empty_text if encoding else empty_bytes
+        if buff[-1:] == newline:
+            yield empty_yield
         for line in lines[:0:-1]:
             yield line.decode(encoding) if encoding else line
         buff = lines[0]
